@@ -2,6 +2,7 @@
 
 This is me trying to learn how to use the Vulkan API.
 
+Shout out to [Alexander Overvoorde's tutorial](https://vulkan-tutorial.com/Introduction).
 
 ## Dependencies
 

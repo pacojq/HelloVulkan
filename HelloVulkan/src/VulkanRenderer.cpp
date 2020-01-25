@@ -26,8 +26,12 @@ void VulkanRenderer::Init()
 	glfwMakeContextCurrent(m_WindowHandle);
 
 	CreateInstance();
+	LOG("[VULKAN INSTANCE READY]");
 	SetupDebugMessenger();
-	//PickPhysicalDevice();
+	PickPhysicalDevice();
+	LOG("[PHYSICAL DEVICE READY]");
+	CreateLogicalDevice();
+	LOG("[LOGICAL DEVICE READY]");
 }
 
 
@@ -318,11 +322,20 @@ void VulkanRenderer::CreateLogicalDevice()
 		createInfo.enabledLayerCount = 0;
 	}
 
-	ASSERT(vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS, "Failed to create logical device!");
+	ASSERT(vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) == VK_SUCCESS, "Failed to create logical device!");
 	vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
 }
 
 
+
+
+
+
+
+void VulkanRenderer::CreateSurface()
+{
+
+}
 
 
 

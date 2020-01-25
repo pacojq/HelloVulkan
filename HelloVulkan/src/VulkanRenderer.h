@@ -54,7 +54,7 @@ private:
 	void SetupDebugMessenger();
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
-	//void CreateSurface();
+	void CreateSurface();
 
 
 // Util functions
@@ -78,8 +78,9 @@ private:
 
 	VkPhysicalDevice m_PhysicalDevice;
 	VkDevice m_Device;
-
 	VkQueue m_GraphicsQueue;
+
+	VkSurfaceKHR m_Surface;
 
 	bool m_EnableValidationLayers;
 	std::vector<const char*> m_ValidationLayers;
