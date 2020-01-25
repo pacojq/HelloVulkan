@@ -6,6 +6,8 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+#include <optional>
+
 struct GLFWwindow;
 
 
@@ -26,6 +28,17 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
 
 
 
+struct QueueFamilyIndices
+{
+	std::optional<uint32_t> graphicsFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value();
+	}
+};
+
+
+
 class VulkanRenderer
 {
 public:
@@ -35,23 +48,38 @@ public:
 	void CleanUp();
 
 
-	// Initialization functions
+// Initialization functions
 private:
 	void CreateInstance();
 	void SetupDebugMessenger();
-	//void PickPhysicalDevice();
+	void PickPhysicalDevice();
+	void CreateLogicalDevice();
 	//void CreateSurface();
 
 
+// Util functions
+private:
 	bool CheckValidationLayerSupport();
 	std::vector<const char*> GetRequiredExtensions();
 
+	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+		const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
+	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+
+	bool IsDeviceSuitable(VkPhysicalDevice device);
 	int RateDeviceSuitability(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+
 
 
 private:
 	GLFWwindow* m_WindowHandle;
 	VkInstance m_Instance;
+
+	VkPhysicalDevice m_PhysicalDevice;
+	VkDevice m_Device;
+
+	VkQueue m_GraphicsQueue;
 
 	bool m_EnableValidationLayers;
 	std::vector<const char*> m_ValidationLayers;
