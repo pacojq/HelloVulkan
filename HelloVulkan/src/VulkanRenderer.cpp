@@ -82,6 +82,8 @@ void VulkanRenderer::Init()
 	LOG("[COMMAND POOL READY]");
 	CreateVertexBuffer();
 	LOG("[VERTEX BUFFER READY]");
+	CreateIndexBuffer();
+	LOG("[INDEX BUFFER READY]");
 	CreateCommandBuffers();
 	LOG("[COMMAND BUFFERS READY]");
 	CreateSyncObjects();
@@ -951,10 +953,10 @@ void VulkanRenderer::CreateVertexBuffer()
 	
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	
 	CreateBuffer(bufferSize, 
 		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
 		stagingBuffer, stagingBufferMemory);
+
 	
 	// Fill the staging buffer with m_Vertices
 	void* data;
@@ -969,6 +971,42 @@ void VulkanRenderer::CreateVertexBuffer()
 		m_VertexBuffer, m_VertexBufferMemory);	
 	
 	CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
+
+
+	// Clean up
+	vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+	vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+}
+
+
+void VulkanRenderer::CreateIndexBuffer()
+{
+	// We'll use a host visible buffer as temporary buffer and a 
+	// device local one as actual index buffer.
+
+
+	VkDeviceSize bufferSize = sizeof(m_Indices[0]) * m_Indices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	CreateBuffer(bufferSize, 
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		stagingBuffer, stagingBufferMemory);
+
+
+	// Fill the staging buffer with m_Indices
+	void* data;
+	vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, m_Indices.data(), (size_t)bufferSize);
+	vkUnmapMemory(m_Device, stagingBufferMemory);
+
+
+	// Create the actual vertex buffer
+	CreateBuffer(bufferSize, 
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+		m_IndexBuffer, m_IndexBufferMemory);
+
+	CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
 
 
 	// Clean up
@@ -1116,10 +1154,11 @@ void VulkanRenderer::CreateCommandBuffers()
 		
 		VkBuffer vertexBuffers[] = { m_VertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
+
 		vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-		vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(m_Vertices.size()), 1, 0, 0);
-
+		vkCmdDrawIndexed(m_CommandBuffers[i], static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 
 
 		// End render pass
@@ -1279,6 +1318,9 @@ void VulkanRenderer::CleanupSwapChain()
 void VulkanRenderer::CleanUp()
 {
 	CleanupSwapChain();
+
+	vkDestroyBuffer(m_Device, m_IndexBuffer, nullptr);
+	vkFreeMemory(m_Device, m_IndexBufferMemory, nullptr);
 
 	vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
 	vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);

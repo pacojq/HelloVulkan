@@ -85,6 +85,7 @@ private:
 	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void CreateVertexBuffer();
+	void CreateIndexBuffer();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
@@ -130,11 +131,14 @@ private:
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
+
 	const std::vector<Vertex> m_Vertices = {
-		{{0.0f, -0.75f}, {1.0f, 1.0f, 1.0f}},
-		{{0.25f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.25f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 	};
+	const std::vector<uint16_t> m_Indices = { 0, 1, 2, 2, 3, 0 };
 
 
 
@@ -162,6 +166,8 @@ private:
 
 	VkBuffer m_VertexBuffer;
 	VkDeviceMemory m_VertexBufferMemory;
+	VkBuffer m_IndexBuffer;
+	VkDeviceMemory m_IndexBufferMemory;
 
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 	VkCommandPool m_CommandPool;
