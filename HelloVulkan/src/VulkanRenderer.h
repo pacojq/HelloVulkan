@@ -66,6 +66,7 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapChain();
 	void CreateImageViews();
+	void CreateGraphicsPipeline();
 
 
 // Util functions
@@ -88,6 +89,8 @@ private:
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
+	VkShaderModule CreateShaderModule(const std::vector<char>& code);
+
 
 
 private:
@@ -108,6 +111,7 @@ private:
 	VkExtent2D m_SwapChainExtent;
 	std::vector<VkImageView> m_SwapChainImageViews;
 
+	VkPipelineLayout m_PipelineLayout;
 
 
 	bool m_EnableValidationLayers;
