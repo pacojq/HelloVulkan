@@ -11,14 +11,17 @@
 
 void Application::Init()
 {
+    uint32_t width = 800;
+    uint32_t height = 600;
+
     int success = glfwInit();
     ASSERT(success, "Could not initialize GLFW!");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    m_Window = glfwCreateWindow(800, 600, "Hello Vulkan", nullptr, nullptr);
+    m_Window = glfwCreateWindow(width, height, "Hello Vulkan", nullptr, nullptr);
 
-    m_Renderer = std::make_unique<VulkanRenderer>(m_Window);
+    m_Renderer = std::make_unique<VulkanRenderer>(m_Window, width, height);
     m_Renderer->Init();
 }
 
