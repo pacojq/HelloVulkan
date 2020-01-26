@@ -73,7 +73,7 @@ private:
 	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void CreateCommandBuffers();
-	void CreateSemaphores();
+	void CreateSyncObjects();
 
 
 // Util functions
@@ -101,6 +101,22 @@ private:
 
 
 private:
+
+	// How many frames should be processed concurrently.
+	const int MAX_FRAMES_IN_FLIGHT = 2;
+
+	const std::vector<const char*> m_ValidationLayers = {
+		"VK_LAYER_KHRONOS_validation"
+	};
+
+	const std::vector<const char*> m_DeviceExtensions = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+
+
+private:
+
 	uint32_t m_Width, m_Height;
 	GLFWwindow* m_Window;
 	VkInstance m_Instance;
@@ -126,19 +142,17 @@ private:
 	VkCommandPool m_CommandPool;
 	std::vector<VkCommandBuffer> m_CommandBuffers;
 
-	VkSemaphore m_ImageAvailableSemaphore;
-	VkSemaphore m_RenderFinishedSemaphore;
+
+	// Each frame has its own semaphore
+
+	std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+	std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+	std::vector<VkFence> m_InFlightFences;
+	std::vector<VkFence> m_ImagesInFlight; // Track each swap chain image if a frame in flight is currently using it
+	size_t m_CurrentFrame = 0;
 
 
 
 	bool m_EnableValidationLayers;
 	VkDebugUtilsMessengerEXT m_DebugMessenger;
-
-	const std::vector<const char*> m_ValidationLayers = {
-		"VK_LAYER_KHRONOS_validation"
-	};
-
-	const std::vector<const char*> m_DeviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
-	};
 };
