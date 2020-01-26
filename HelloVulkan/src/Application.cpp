@@ -38,7 +38,8 @@ void Application::MainLoop()
     glm::vec4 vec;
     auto test = matrix * vec;
 
-    while (!glfwWindowShouldClose(m_Window)) {
+    while (!glfwWindowShouldClose(m_Window))
+    {
         glfwPollEvents();
         m_Renderer->DrawFrame();
     }

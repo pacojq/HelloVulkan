@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Vertex.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -25,6 +27,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
 	LOG("Vulkan validation layer: " << pCallbackData->pMessage);
 	return VK_FALSE;
 }
+
+
+
+
+
 
 
 
@@ -77,6 +84,7 @@ private:
 	void CreateGraphicsPipeline();
 	void CreateFrameBuffers();
 	void CreateCommandPool();
+	void CreateVertexBuffer();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
@@ -103,6 +111,7 @@ private:
 
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
+	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 
 private:
@@ -116,6 +125,12 @@ private:
 
 	const std::vector<const char*> m_DeviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+	const std::vector<Vertex> m_Vertices = {
+		{{0.0f, -0.75f}, {1.0f, 1.0f, 1.0f}},
+		{{0.25f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.25f, 0.5f}, {0.0f, 0.0f, 1.0f}},
 	};
 
 
@@ -141,6 +156,9 @@ private:
 	VkPipelineLayout m_PipelineLayout;
 	VkRenderPass m_RenderPass;
 	VkPipeline m_GraphicsPipeline;
+
+	VkBuffer m_VertexBuffer;
+	VkDeviceMemory m_VertexBufferMemory;
 
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 	VkCommandPool m_CommandPool;

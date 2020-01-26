@@ -1133,6 +1133,7 @@
     </ClInclude>
     <ClInclude Include="src\VulkanRenderer.h" />
     <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">

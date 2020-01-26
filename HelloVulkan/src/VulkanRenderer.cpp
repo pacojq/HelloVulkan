@@ -60,8 +60,8 @@ void VulkanRenderer::Init()
 	glfwMakeContextCurrent(m_Window);
 
 	CreateInstance();
-	LOG("[VULKAN INSTANCE READY]");
 	SetupDebugMessenger();
+	LOG("[VULKAN INSTANCE READY]");
 	CreateSurface();
 	LOG("[SURFACE READY]");
 	PickPhysicalDevice();
@@ -73,11 +73,15 @@ void VulkanRenderer::Init()
 	CreateImageViews();
 	LOG("[IMAGE VIEWS READY]");
 	CreateRenderPass();
+	LOG("[RENDER PASS READY]");
 	CreateGraphicsPipeline();
 	LOG("[PIPELINE READY]");
 	CreateFrameBuffers();
 	LOG("[FRAME BUFFERS READY]");
 	CreateCommandPool();
+	LOG("[COMMAND POOL READY]");
+	CreateVertexBuffer();
+	LOG("[VERTEX BUFFER READY]");
 	CreateCommandBuffers();
 	LOG("[COMMAND BUFFERS READY]");
 	CreateSyncObjects();
@@ -724,12 +728,16 @@ void VulkanRenderer::CreateGraphicsPipeline()
 	//		describes the format of the vertex data that will be passed
 	//		to the vertex shader.
 
+	auto bindingDescription = Vertex::GetBindingDescription();
+	auto attributeDescriptions = Vertex::GetAttributeDescriptions();
+
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+	
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 
 	// Input Assembly
@@ -934,6 +942,60 @@ void VulkanRenderer::CreateCommandPool()
 
 
 
+void VulkanRenderer::CreateVertexBuffer()
+{
+	// Create the vertex buffer
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = sizeof(m_Vertices[0]) * m_Vertices.size();
+
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	ASSERT(vkCreateBuffer(m_Device, &bufferInfo, nullptr, &m_VertexBuffer) == VK_SUCCESS, "Failed to create vertex buffer!");
+
+
+	// Allocate memory
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(m_Device, m_VertexBuffer, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	ASSERT(vkAllocateMemory(m_Device, &allocInfo, nullptr, &m_VertexBufferMemory) == VK_SUCCESS, "Failed to allocate vertex buffer memory!");
+	
+	vkBindBufferMemory(m_Device, m_VertexBuffer, m_VertexBufferMemory, 0);
+
+
+	// Fill the vertex buffer
+	void* data;
+	vkMapMemory(m_Device, m_VertexBufferMemory, 0, bufferInfo.size, 0, &data);
+	memcpy(data, m_Vertices.data(), (size_t)bufferInfo.size); // Filll with m_Vertices
+	vkUnmapMemory(m_Device, m_VertexBufferMemory);
+}
+
+uint32_t VulkanRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
+
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
+			return i;
+		}
+	}
+
+	ASSERT(false, "Failed to find suitable memory type!");
+}
+
+
+
+
+
 void VulkanRenderer::CreateCommandBuffers()
 {
 	// Create command buffers
@@ -948,7 +1010,6 @@ void VulkanRenderer::CreateCommandBuffers()
 
 	ASSERT(vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data()) == VK_SUCCESS, "Failed to allocate command buffers!");
 	
-
 
 
 	for (size_t i = 0; i < m_CommandBuffers.size(); i++)
@@ -980,20 +1041,20 @@ void VulkanRenderer::CreateCommandBuffers()
 		vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 
-
-		// Bind the Graphics Pipeline and Draw
-
+		// Bind the Graphics Pipeline and Draw m_Vertices
 		vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
-		vkCmdDraw(m_CommandBuffers[i], 3, 1, 0, 0);
+		
+		VkBuffer vertexBuffers[] = { m_VertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);
 
+		vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(m_Vertices.size()), 1, 0, 0);
 
 
 
 		// End render pass
-
 		vkCmdEndRenderPass(m_CommandBuffers[i]);
 		ASSERT(vkEndCommandBuffer(m_CommandBuffers[i]) == VK_SUCCESS, "Failed to record command buffer!");
-
 	}
 
 }
@@ -1148,6 +1209,9 @@ void VulkanRenderer::CleanupSwapChain()
 void VulkanRenderer::CleanUp()
 {
 	CleanupSwapChain();
+
+	vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
+	vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
