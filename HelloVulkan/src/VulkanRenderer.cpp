@@ -36,8 +36,8 @@ static std::vector<char> ReadFile(const std::string& filename)
 
 
 
-VulkanRenderer::VulkanRenderer(GLFWwindow* windowHandle, uint32_t width, uint32_t height)
-	: m_Width(width), m_Height(height), m_Window(windowHandle)
+VulkanRenderer::VulkanRenderer(GLFWwindow* windowHandle)
+	: m_Window(windowHandle)
 {
 	ASSERT(windowHandle, "Window handle is null!");
 
@@ -46,6 +46,12 @@ VulkanRenderer::VulkanRenderer(GLFWwindow* windowHandle, uint32_t width, uint32_
 #else
 	m_enableValidationLayers = false;
 #endif
+}
+
+
+void VulkanRenderer::OnWindowResize(int width, int height)
+{
+	m_FramebufferResized = true;
 }
 
 
@@ -76,6 +82,32 @@ void VulkanRenderer::Init()
 	LOG("[COMMAND BUFFERS READY]");
 	CreateSyncObjects();
 }
+
+
+void VulkanRenderer::RecreateSwapChain()
+{
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(m_Window, &width, &height);
+
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(m_Window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(m_Device);
+
+	CleanupSwapChain();
+
+	CreateSwapChain();
+	CreateImageViews();
+	CreateRenderPass();
+	CreateGraphicsPipeline();
+	CreateFrameBuffers();
+	CreateCommandBuffers();
+}
+
+
 
 
 
@@ -442,7 +474,10 @@ VkExtent2D VulkanRenderer::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capa
 	}
 	else
 	{
-		VkExtent2D actualExtent = { m_Width, m_Height };
+		int width, height;
+		glfwGetFramebufferSize(m_Window, &width, &height);
+
+		VkExtent2D actualExtent = { width, height };
 
 		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
 		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
@@ -1005,8 +1040,18 @@ void VulkanRenderer::DrawFrame()
 
 	// Acquire an image from the swap chain
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 	
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+	{
+		m_FramebufferResized = false;
+		RecreateSwapChain();
+	}
+	else if (result != VK_SUCCESS)
+	{
+		ASSERT(false, "Failed to acquire swap chain image!");
+	}
+
 
 	// Check if a previous frame is using this image (i.e. there is its fence to wait on)
 	if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
@@ -1076,8 +1121,34 @@ void VulkanRenderer::ExitMainLoop()
 
 
 
+
+
+void VulkanRenderer::CleanupSwapChain()
+{
+	for (size_t i = 0; i < m_SwapChainFramebuffers.size(); i++)
+	{
+		vkDestroyFramebuffer(m_Device, m_SwapChainFramebuffers[i], nullptr);
+	}
+
+	vkFreeCommandBuffers(m_Device, m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+
+	vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
+	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
+
+	for (size_t i = 0; i < m_SwapChainImageViews.size(); i++)
+	{
+		vkDestroyImageView(m_Device, m_SwapChainImageViews[i], nullptr);
+	}
+
+	vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
+}
+
+
 void VulkanRenderer::CleanUp()
 {
+	CleanupSwapChain();
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
 		vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
@@ -1090,23 +1161,7 @@ void VulkanRenderer::CleanUp()
 		DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
-	for (auto framebuffer : m_SwapChainFramebuffers)
-	{
-		vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
-	}
-
-	for (auto imageView : m_SwapChainImageViews)
-	{
-		vkDestroyImageView(m_Device, imageView, nullptr);
-	}
-
 	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
-
-	vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
-
-	vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
-	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 
 	vkDestroyDevice(m_Device, nullptr);
 	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);

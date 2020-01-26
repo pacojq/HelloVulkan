@@ -51,13 +51,18 @@ struct SwapChainSupportDetails
 class VulkanRenderer
 {
 public:
-	VulkanRenderer(GLFWwindow* windowHandle, uint32_t width, uint32_t height);
+	VulkanRenderer(GLFWwindow* windowHandle);
 
 	void Init();
 	void DrawFrame();
 	void ExitMainLoop();
 	void CleanUp();
 
+	void OnWindowResize(int width, int height);
+
+private:
+	void RecreateSwapChain();
+	void CleanupSwapChain();
 
 // Initialization functions
 private:
@@ -117,7 +122,6 @@ private:
 
 private:
 
-	uint32_t m_Width, m_Height;
 	GLFWwindow* m_Window;
 	VkInstance m_Instance;
 
@@ -151,7 +155,7 @@ private:
 	std::vector<VkFence> m_ImagesInFlight; // Track each swap chain image if a frame in flight is currently using it
 	size_t m_CurrentFrame = 0;
 
-
+	bool m_FramebufferResized = false;
 
 	bool m_EnableValidationLayers;
 	VkDebugUtilsMessengerEXT m_DebugMessenger;

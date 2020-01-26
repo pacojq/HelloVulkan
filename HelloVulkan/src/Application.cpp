@@ -18,10 +18,16 @@ void Application::Init()
     ASSERT(success, "Could not initialize GLFW!");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     m_Window = glfwCreateWindow(width, height, "Hello Vulkan", nullptr, nullptr);
+    glfwSetWindowUserPointer(m_Window, this);
+    
+    glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+    {
+        auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+        app->m_Renderer->OnWindowResize(width, height);
+    });
 
-    m_Renderer = std::make_unique<VulkanRenderer>(m_Window, width, height);
+    m_Renderer = std::make_unique<VulkanRenderer>(m_Window);
     m_Renderer->Init();
 }
 
