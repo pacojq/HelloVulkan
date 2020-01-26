@@ -54,6 +54,8 @@ public:
 	VulkanRenderer(GLFWwindow* windowHandle, uint32_t width, uint32_t height);
 
 	void Init();
+	void DrawFrame();
+	void ExitMainLoop();
 	void CleanUp();
 
 
@@ -68,6 +70,10 @@ private:
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
+	void CreateFrameBuffers();
+	void CreateCommandPool();
+	void CreateCommandBuffers();
+	void CreateSemaphores();
 
 
 // Util functions
@@ -115,6 +121,14 @@ private:
 	VkPipelineLayout m_PipelineLayout;
 	VkRenderPass m_RenderPass;
 	VkPipeline m_GraphicsPipeline;
+
+	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+	VkCommandPool m_CommandPool;
+	std::vector<VkCommandBuffer> m_CommandBuffers;
+
+	VkSemaphore m_ImageAvailableSemaphore;
+	VkSemaphore m_RenderFinishedSemaphore;
+
 
 
 	bool m_EnableValidationLayers;

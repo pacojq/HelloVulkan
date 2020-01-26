@@ -34,8 +34,14 @@ void Application::MainLoop()
 
     while (!glfwWindowShouldClose(m_Window)) {
         glfwPollEvents();
+        m_Renderer->DrawFrame();
     }
+
+    m_Renderer->ExitMainLoop();
 }
+
+
+
 
 
 void Application::CleanUp()
