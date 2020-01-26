@@ -66,6 +66,7 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapChain();
 	void CreateImageViews();
+	void CreateRenderPass();
 	void CreateGraphicsPipeline();
 
 
@@ -112,6 +113,8 @@ private:
 	std::vector<VkImageView> m_SwapChainImageViews;
 
 	VkPipelineLayout m_PipelineLayout;
+	VkRenderPass m_RenderPass;
+	VkPipeline m_GraphicsPipeline;
 
 
 	bool m_EnableValidationLayers;
