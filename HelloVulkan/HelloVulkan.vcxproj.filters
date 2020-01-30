@@ -1134,6 +1134,7 @@
     <ClInclude Include="src\VulkanRenderer.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Vertex.h" />
+    <ClInclude Include="src\UniformBufferObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
