@@ -92,6 +92,8 @@ private:
 	void CreateCommandPool();
 	
 	void CreateTextureImage();
+	void CreateTextureImageView();
+	void CreateTextureSampler();
 	
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
@@ -141,6 +143,8 @@ private:
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+	VkImageView CreateImageView(VkImage image, VkFormat format);
 	
 
 private:
@@ -206,8 +210,12 @@ private:
 
 
 	// Image
+	
 	VkImage m_TextureImage;
 	VkDeviceMemory m_TextureImageMemory;
+	VkImageView m_TextureImageView;
+	VkSampler m_TextureSampler;
+
 
 	
 
