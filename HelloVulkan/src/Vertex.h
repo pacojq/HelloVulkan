@@ -12,6 +12,11 @@ struct Vertex {
 	glm::vec3 Color;
 	glm::vec2 TexCoord;
 
+	bool operator==(const Vertex& other) const
+	{
+		return Pos == other.Pos && Color == other.Color && TexCoord == other.TexCoord;
+	}
+	
 	static VkVertexInputBindingDescription GetBindingDescription()
 	{
 		VkVertexInputBindingDescription bindingDescription = {};
@@ -47,3 +52,17 @@ struct Vertex {
 		return attributeDescriptions;
 	}
 };
+
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
+namespace std {
+	template<> struct hash<Vertex> {
+		size_t operator()(Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.Pos) ^
+				(hash<glm::vec3>()(vertex.Color) << 1)) >> 1) ^
+				(hash<glm::vec2>()(vertex.TexCoord) << 1);
+		}
+	};
+}

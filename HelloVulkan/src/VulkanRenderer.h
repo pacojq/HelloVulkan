@@ -96,6 +96,8 @@ private:
 	void CreateTextureImage();
 	void CreateTextureImageView();
 	void CreateTextureSampler();
+
+	void LoadModel();
 	
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
@@ -159,6 +161,9 @@ private:
 
 private:
 
+	const std::string MODEL_PATH = "res/japanese_mask/source/UMesh_PM3D_Sphere3D9_1.obj";
+	const std::string TEXTURE_PATH = "res/japanese_mask/textures/UMesh_PM3D_Sphere3D9_1_defaultMat_BaseColo.png";
+	
 	// How many frames should be processed concurrently.
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -171,6 +176,7 @@ private:
 	};
 
 
+	/*
 	const std::vector<Vertex> m_Vertices = {
 		// Position            // Color            // Texcoord
 		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -189,7 +195,7 @@ private:
 		
 		4, 5, 6, 6, 7, 4
 	};
-
+	*/
 
 
 private:
@@ -214,6 +220,10 @@ private:
 	VkPipelineLayout m_PipelineLayout;
 	VkRenderPass m_RenderPass;
 	VkPipeline m_GraphicsPipeline;
+
+
+	std::vector<Vertex> m_Vertices;
+	std::vector<uint32_t> m_Indices;
 
 	VkBuffer m_VertexBuffer;
 	VkDeviceMemory m_VertexBufferMemory;
@@ -243,6 +253,8 @@ private:
 	VkImage m_DepthImage;
 	VkDeviceMemory m_DepthImageMemory;
 	VkImageView m_DepthImageView;
+
+
 
 	
 

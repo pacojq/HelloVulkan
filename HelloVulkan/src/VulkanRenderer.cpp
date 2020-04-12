@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
 
 #include <cstdint> // Necessary for UINT32_MAX
 #include <algorithm> // std::min std::max
@@ -21,6 +22,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
 
 
 static std::vector<char> ReadFile(const std::string& filename)
@@ -108,6 +111,9 @@ void VulkanRenderer::Init()
 	LOG("[TEXTURE VIEW READY]");
 	CreateTextureSampler();
 	LOG("[TEXTURE SAMPLER READY]");
+
+	LoadModel();
+	LOG("[3D MODEL READY]");
 	
 	CreateVertexBuffer();
 	LOG("[VERTEX BUFFER READY]");
@@ -1111,7 +1117,10 @@ void VulkanRenderer::CreateTextureImage()
 	// Load image from memory
 	
 	int texWidth, texHeight, texChannels;
-	stbi_uc* pixels = stbi_load("res/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	//stbi_uc* pixels = stbi_load("res/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 	ASSERT(pixels, "failed to load texture image!");
@@ -1374,6 +1383,53 @@ void VulkanRenderer::CreateTextureSampler()
 
 }
 
+
+
+
+
+void VulkanRenderer::LoadModel()
+{
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	ASSERT(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str()), warn + err);
+
+	
+	std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+	
+	for (const auto& shape : shapes) // Iterate through the shapes of the model
+	{
+		for (const auto& index : shape.mesh.indices)
+		{
+			Vertex vertex = {};
+		
+			vertex.Pos = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
+
+			vertex.TexCoord = {
+				//attrib.texcoords[2 * index.texcoord_index + 0],
+				//attrib.texcoords[2 * index.texcoord_index + 1]
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+			};
+
+			vertex.Color = { 1.0f, 1.0f, 1.0f };
+
+			
+			if (uniqueVertices.count(vertex) == 0) {
+				uniqueVertices[vertex] = static_cast<uint32_t>(m_Vertices.size());
+				m_Vertices.push_back(vertex);
+			}
+
+			m_Indices.push_back(uniqueVertices[vertex]);
+		}
+	}
+}
 
 
 
@@ -1671,7 +1727,7 @@ void VulkanRenderer::CreateCommandBuffers()
 			VkDeviceSize offsets[] = { 0 };
 
 			vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);
-			vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 			vkCmdBindDescriptorSets(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSets[i], 0, nullptr);
 			vkCmdDrawIndexed(m_CommandBuffers[i], static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
