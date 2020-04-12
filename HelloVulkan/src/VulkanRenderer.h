@@ -90,6 +90,8 @@ private:
 	
 	void CreateFrameBuffers();
 	void CreateCommandPool();
+
+	void CreateDepthResources();
 	
 	void CreateTextureImage();
 	void CreateTextureImageView();
@@ -137,6 +139,14 @@ private:
 
 	VkCommandBuffer BeginSingleTimeCommands();
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+
+
+	VkFormat FindDepthFormat();
+	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+
+	bool HasStencilComponent(VkFormat format);
+
 	
 	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 
@@ -144,7 +154,7 @@ private:
 
 	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
-	VkImageView CreateImageView(VkImage image, VkFormat format);
+	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	
 
 private:
@@ -162,13 +172,23 @@ private:
 
 
 	const std::vector<Vertex> m_Vertices = {
-		// Position      // Color            // Texcoord
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, -0.5f},  {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, 0.5f},   {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-0.5f, 0.5f},  {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+		// Position            // Color            // Texcoord
+		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+		{{0.5f, -0.5f, 0.0f},  {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f},   {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+		// Position             // Color            // Texcoord
+		{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+		{{0.5f, -0.5f, -0.5f},  {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, 0.5f, -0.5f},   {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-0.5f, 0.5f, -0.5f},  {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 	};
-	const std::vector<uint16_t> m_Indices = { 0, 1, 2, 2, 3, 0 };
+	const std::vector<uint16_t> m_Indices = {
+		0, 1, 2, 2, 3, 0,
+		
+		4, 5, 6, 6, 7, 4
+	};
 
 
 
@@ -217,6 +237,12 @@ private:
 	VkImageView m_TextureImageView;
 	VkSampler m_TextureSampler;
 
+
+	// Depth image
+	
+	VkImage m_DepthImage;
+	VkDeviceMemory m_DepthImageMemory;
+	VkImageView m_DepthImageView;
 
 	
 
