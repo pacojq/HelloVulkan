@@ -1135,6 +1135,7 @@
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Vertex.h" />
     <ClInclude Include="src\UniformBufferObject.h" />
+    <ClInclude Include="vendor\stb_master\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">

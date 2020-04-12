@@ -76,21 +76,30 @@ private:
 private:
 	void CreateInstance();
 	void SetupDebugMessenger();
+	
 	void CreateSurface();
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
+	
 	void CreateSwapChain();
 	void CreateImageViews();
 	void CreateRenderPass();
+	
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
+	
 	void CreateFrameBuffers();
 	void CreateCommandPool();
+	
+	void CreateTextureImage();
+	
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 	void CreateUniformBuffers();
+	
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
+	
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
@@ -123,6 +132,16 @@ private:
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 	void UpdateUniformBuffer(uint32_t currentImage);
+
+	VkCommandBuffer BeginSingleTimeCommands();
+	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+	
+	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
+	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	
 
 private:
 
@@ -185,6 +204,12 @@ private:
 	VkCommandPool m_CommandPool;
 	std::vector<VkCommandBuffer> m_CommandBuffers;
 
+
+	// Image
+	VkImage m_TextureImage;
+	VkDeviceMemory m_TextureImageMemory;
+
+	
 
 	// Each frame has its own semaphore
 
